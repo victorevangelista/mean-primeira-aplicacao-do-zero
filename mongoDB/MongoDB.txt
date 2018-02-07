@@ -1,0 +1,120 @@
+MongoDB
+
+DICAS
+	 - O MongoDB é case sensitive, ou seja, é permitido criar duas collections com o mesmo nome onde a forma de escrita possui diferença nos caracteres maiusculos e minusculos.
+	 - Um banco somente existirá se pelo menos uma collection estiver criada nele.
+	 - O MongoDB trabalha com 3 camadas: 
+		- Banco de dados 
+		- Collection
+		- Documento
+	 - Os documentos são strings com a notação de objeto javascript ou json
+
+
+COMANDOS BÁSICOS
+
+-- Start MongoDB Server
+mongod
+
+-- Acessar o console do MongoDB
+mongo
+
+-- listagem de todos os bancos criados
+show dbs
+
+-- mudar e acessar (usar) um banco de dados
+use <db_name>
+ex.: use db_finance
+
+-- informa qual DB esta em uso
+db
+
+-- Criação de collection
+db.createCollection('<colection_name>')
+ex.: db.createCollection('billingCycles')
+
+-- listagem de todas as collections do banco em uso
+show collections
+
+-- Drop collections
+db.<colection_name>.drop()
+ex.: db.billingCycles.drop()
+
+-- Drop banco de dados em uso
+db.dropDatabase()
+
+
+COMANDOS DE INSERÇÃO
+
+-- Inserção de um documento
+db.<colection_name>.insert(<string json ou objeto javascript>)
+ex.: 	db.billingCycles.insert({name: "Janeiro/17", month: 1, year: 2017})
+		db.billingCycles.insert({
+		... name: "Março/17", 
+		... month: 1, 
+		... year: 2017,
+		... credits: [
+		... {name: "Salário", value: 5000}
+		... ],
+		... debts: [
+		... {name: "Luz", value: 100, status: "PAGO"},
+		... {name: "Telefone", value: 100, status: "PENDENTE"},
+		... ]
+		... })
+
+-- Salvar um documento (essa função permite tanto a inserção de um novo documento, como a atualização de um documento já existente)
+db.<colection_name>.save(<string json ou objeto javascript>)
+ex.: db.billingCycles.save({name: "Fevereiro/17", month: 2, year: 2017})
+
+COMANDOS DE CONSULTAS
+
+-- realizar uma consulta simples com identação no resulta (pretty)
+db.<colection_name>.find().pretty()
+ex.: db.billingCycles.find().pretty()
+
+-- realizar consulta e retornar apenas um registro com filtro
+db.<colection_name>.findOne(<string com o filtro (objeto ou json)>).pretty()
+ex.: db.billingCycles.findOne({month: 2}).pretty()
+
+-- realizar consulta com filtro (where) e critérios (and/or)
+db.<colection_name>.find({$or: [<objeto/json para usar no critério E/OU>]})
+ex.: db.billingCycles.find({$or: [{month: 1}, {month: 2}]}).pretty()
+
+-- consulta de documentos que possuem ou não um determinado atributo
+db.<colection_name>.find({<attribute_name>:{$exists:true/false}}).pretty()
+ex.: db.billingCycles.find({credits:{$exists:true}}).pretty()
+
+-- realizar uma consulta retornando apenas os atributos que deseja exibir de um documento
+db.<colection_name>.find({<critério de filtro>},{_id:0, <attribute_name>:1}).pretty()
+ex.: db.billingCycles.find({credits: {$exists: true}},{_id:0, name:1}).pretty()
+
+-- consulta com função de paginação (skip: pular uma quantidade de registro e limit: limitar a quantidade de documentos retornados)
+db.<colection_name>.find(<critério de busca (objeto/json)>).skip(<qtd. de documentos que deseja pular>).limit(<qtd. de documentos que deseja limitar na pesquisa>)
+ex.: db.<colection_name>.find({year:2017}).skip(1).limit(1)
+
+COMANDOS DE AGREGAÇÃO
+
+-- consulta agregada dos dados
+ex.: 	db.billingCycles.aggregate([{
+		... $project:{credit:{$sum:"$credits.value"},debt:{$sum:"$debts.value"}},
+		... },{
+		... $group:{_id:null,credit:{$sum:"$credit"},debt:{$sum:"$debt"}}
+		... }])
+
+COMANDOS DE ALTERÇÃO
+
+-- realizar atualização de um documento através do update
+db.<colection_name>.update({<critério de filtro>},$set: {<objeto/json que quer inserir ou modificar>})
+ex.: 	db.billingCycles.update(
+		... {$and: [{month: 1},{year: 2017}]},
+		... {$set: {credits: [{name: "Salário", value: 5000}]}} 
+		... )
+
+COMANDOS DE EXCLUSÃO E CONTADOR
+
+-- Retorna a quantidade de documentos de uma determinada collection
+db.<colection_name>.count()
+ex.: db.billingCycles.count()
+
+-- realiza a exclusão de um documento
+db.<colection_name>.remove(<critério, filtro para exclusão>, <qtd. de documentos que deseja excluir>)
+ex.: db.billingCycles.remove({year:2017}, 1)
